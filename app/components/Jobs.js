@@ -40,28 +40,36 @@ class Jobs extends Component {
         </View>
       );
     }
-
-    return (
-      <View style={ styles.listStyle }>
-        <Text style={ styles.userStyle } >
-          {"Today's Job Site"}
-        </Text>
-        <ListView
-          dataSource={this.state.dataSource}
-            renderRow={(rowData) =>
-            <Text style={ styles.textStyle }>
-                <Text style={ styles.textStyle } >
-                {rowData.jobAddress}
-                {/* {"Week Time: " + rowData.weekTimeInHours},
-                {"Pay Rate: " + rowData.payRate},
-                {"Period Pay: " + rowData.totalPay},
-                {"Clock In Status: " + rowData.clocked} */}
-                </Text>
-            </Text>
-            }
-        />
-      </View>
-    );
+    
+    if (this.state.dataSource = []) {
+      return (
+        <View>
+          <Text></Text>
+        </View>
+      );
+    } else {
+      return (
+        <View style={ styles.listStyle }>
+          <Text style={ styles.userStyle } >
+            {"Today's Job Site"}
+          </Text>
+          <ListView
+            dataSource={this.state.dataSource}
+              renderRow={(rowData) =>
+              <Text style={ styles.textStyle }>
+                  <Text style={ styles.textStyle } >
+                  {rowData.jobAddress}
+                  {/* {"Week Time: " + rowData.weekTimeInHours},
+                  {"Pay Rate: " + rowData.payRate},
+                  {"Period Pay: " + rowData.totalPay},
+                  {"Clock In Status: " + rowData.clocked} */}
+                  </Text>
+              </Text>
+              }
+          />
+        </View>
+      );
+    }
   }
 }
 
