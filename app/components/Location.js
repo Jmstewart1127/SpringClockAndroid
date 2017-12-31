@@ -15,6 +15,7 @@ class Location extends Component {
       coordinateMatches: [],
       clockStatus: null,
       error: null,
+      manualClockInOut: false,
     };
   }
 
@@ -129,6 +130,17 @@ class Location extends Component {
     );
   }
 
+  _manualClockInOut() {
+    this.setState({
+      manualClockInOut: true,
+    });
+    if (this.state.manualClockInOut && this.state.clockStatus) {
+      this._clockOut();
+    } else {
+      this._getCurrentLocation();
+    }
+  }
+
   _clockStatusText() {
     if (this.state.clockStatus === null) {
       if (this.props.clockStatus) {
@@ -145,7 +157,9 @@ class Location extends Component {
   }
 
   componentWillMount() {
-     this.timer = setInterval(()=> this._getCurrentLocation(), 5000);
+    if (!this.state.manualClockInOut) {
+      this.timer = setInterval(()=> this._getCurrentLocation(), 5000);
+    }
   }
 
   render() {
@@ -164,6 +178,11 @@ class Location extends Component {
           <Text style={ styles.textStyle }>{"Pay Rate: " + "$" + this.props.payRate}</Text>
           <Text style={ styles.textStyle }>{"Net Pay: " + "$" + this.props.totalPay}</Text>
           <Text style={ styles.textStyle }>{this._clockStatusText()}</Text>
+          <TouchableOpacity
+            onPress={() => this._manualClockInOut()}
+          >
+            <Text>Clock In/Out</Text>
+          </TouchableOpacity>
         </View>
       );
     }
