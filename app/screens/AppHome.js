@@ -1,16 +1,8 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, AppRegistry, AsyncStorage } from 'react-native';
-import { StackNavigator } from 'react-navigation';
-
-import Button             from '../components/Button';
-import MyTextInput        from '../components/TextInput';
-import EmployeeList       from '../components/EmployeeList';
-import Clock              from '../components/Clock';
-import Location           from '../components/Location';
-import AddressLocation    from '../components/AddressLocation';
-import EmployeeStatus     from '../components/EmployeeStatus';
-import Refresh            from '../components/Refresh';
-import Jobs               from '../components/Jobs';
+import { AsyncStorage, Text, View } from 'react-native';
+import EnterIdForm from '../components/EnterIdForm';
+import EmployeeStatus from '../components/EmployeeStatus';
+import Refresh from '../components/Refresh';
 
 class AppHome extends Component {
   constructor(props) {
@@ -25,7 +17,6 @@ class AppHome extends Component {
   };
 
   async _userIdTrue() {
-      let context = this;
       try {
          let value = await AsyncStorage.getItem('userId');
          if (value != null){
@@ -51,28 +42,16 @@ class AppHome extends Component {
       return (
         <View style={ styles.outerScreen }>
           <Text style={ styles.labelStyle }>Enter Employee ID</Text>
-          <Clock></Clock>
+          <EnterIdForm/>
           <Refresh
             func = { this._userIdTrue() }
-          ></Refresh>
+          />
         </View>
       );
     } else {
-    const { navigate } = this.props.navigation;
       return (
-        <View style={ styles.outerScreen }>
-          <Text style={ styles.componentPadding }></Text>
-          <Jobs/>
-          <Text style={ styles.componentPadding }></Text>
-          <EmployeeStatus></EmployeeStatus>
-          <Text style={ styles.componentPadding }></Text>
-          <Text style={ styles.componentPadding }></Text>
-          <TouchableOpacity
-            style={ styles.changeId }
-            onPress={() => navigate('Home')}
-          >
-            <Text>Change ID</Text>
-          </TouchableOpacity>
+        <View>
+          <EmployeeStatus/>
         </View>
       );
     }
@@ -80,11 +59,11 @@ class AppHome extends Component {
 }
 
 const styles = {
-  screenStyle: {
+  outerScreen: {
     flex: 1,
     flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-start',
+    alignItems: 'stretch',
   },
 
   componentPadding: {

@@ -1,30 +1,25 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, TextInput, AppRegistry } from 'react-native';
+import { Text, View  } from 'react-native';
+import Button from './Button';
+import MyTextInput from './TextInput';
 
-import Button                from '../components/Button.js';
-import MyTextInput           from '../components/TextInput.js';
-import Location              from '../components/Location.js';
-import AddressLocation       from '../components/AddressLocation.js';
-
-
-class Clock extends Component {
+class EnterIdForm extends Component {
   constructor(props) {
     super(props);
     this.state = { text: "Enter ID", };
   }
 
   render() {
-    let userId = this.state.text;
     return(
       <View style={ styles.screenStyle }>
         <MyTextInput
           onChangeText={(text) => this.setState({text:text})}
-        ></MyTextInput>
+        />
         <Text
           style={ styles.buttonPadding }
         />
         <Button
-          id = { userId }
+          id = { this.state.text }
         />
         <Text
           style={ styles.componentPadding }
@@ -55,4 +50,4 @@ const styles = {
 
 }
 
-export default Clock;
+export default EnterIdForm;

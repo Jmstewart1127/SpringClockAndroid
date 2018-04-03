@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { View, Text, TouchableOpacity, AsyncStorage } from 'react-native';
-import EmployeeStatus from '../components/EmployeeStatus';
-import Jobs from '../components/Jobs';
+import { Avatar, Card, List, ListItem, Button, Divider } from 'react-native-elements'
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 class Location extends Component {
   constructor(props) {
@@ -13,9 +13,10 @@ class Location extends Component {
       addressLat: null,
       addressLng: null,
       coordinateMatches: [],
+      jobId: null,
       clockStatus: null,
+      clockable: false,
       error: null,
-      manualClockInOut: false,
     };
   }
 
@@ -37,27 +38,31 @@ class Location extends Component {
 
   async _clockIn() {
     let id = await AsyncStorage.getItem('userId');
+    let jobId = this.state.jobId;
+    console.log("this.state.jobId: " + jobId);
     if (this.state.latitude && this.state.longitude) {
-      fetch('https://spring-clock.herokuapp.com/rest/clock/in/' + id)
-      .then((responseJson) => {
-        return responseJson;
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+      fetch('https://spring-clock.herokuapp.com/rest/mobile/clock/in/' + id + '/' + jobId)
+        .then((responseJson) => {
+          return responseJson;
+        })
+        .catch((error) => {
+          console.error(error);
+        });
     }
   }
 
   async _clockOut() {
     let id = await AsyncStorage.getItem('userId');
+    let jobId = this.state.jobId;
+    console.log(jobId);
     if (this.state.latitude && this.state.longitude) {
-      fetch('https://spring-clock.herokuapp.com/rest/clock/out/' + id)
-      .then((responseJson) => {
-        return responseJson;
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+      fetch('https://spring-clock.herokuapp.com/rest/mobile/clock/out/' + id + '/' + jobId)
+        .then((responseJson) => {
+          return responseJson;
+        })
+        .catch((error) => {
+          console.error(error);
+        });
     }
   }
 
@@ -69,9 +74,9 @@ class Location extends Component {
 
   _clockInAndOut(arr) {
     if (this._checkTrue(arr, true)) {
-      this._clockIn();
       this.setState({
         clockStatus: true,
+        clockable: true,
       })
     } else {
       this._clockOut();
@@ -81,37 +86,49 @@ class Location extends Component {
     }
   }
 
-  _getAddresses(bizId) {
-    fetch('https://spring-clock.herokuapp.com/rest/jobs/address/' + bizId)
-    .then((response) => response.json())
-    .then((responseJson) => {
-      var addresses = [];
-      var coordMatch = [];
-      for (var i=0; i<responseJson.length; i++) {
-        addresses.push(responseJson[i]);
-        for (var j=0; j<addresses.length; j++) {
-          fetch('https://maps.googleapis.com/maps/api/geocode/json?address='+ addresses[j].split(" ") + '&key=AIzaSyDlXAOpZfmgDvrk4G7MkD6NXxPf9yJeJo8')
-            .then((response) => response.json())
-            .then((responseJson) => {
-              let lat = responseJson.results["0"].geometry.location.lat;
-              let lng = responseJson.results["0"].geometry.location.lng;
-              if (this._latMatch(this.state.latitude, lat) && this._lngMatch(this.state.longitude, lng)) {
-                let match = true;
-                coordMatch.push(match);
-              } else {
-                let noMatch = false;
-                coordMatch.push(noMatch);
-              }
-              this.setState({
-                coordinateMatches: coordMatch,
+  async _getAddresses() {
+    let userId = await AsyncStorage.getItem('userId');
+    fetch('https://spring-clock.herokuapp.com/rest/mobile/jobs/assigned/employee/' + userId)
+      .then((response) => response.json())
+      .then((responseJson) => {
+        const addresses = [];
+        const coordMatch = [];
+        const jobIds = [];
+        let jobId;
+        console.log(responseJson);
+        for (var i=0; i<responseJson.length; i++) {
+          console.log("id: " + responseJson[i].id);
+          console.log("ja: " + responseJson[i].jobAddress);
+          jobIds.push(responseJson[i].id);
+          addresses.push(responseJson[i].jobAddress);
+          for (var j=0; j<addresses.length; j++) {
+            let jobIdMatch = jobIds[j];
+            console.log("jobIds array: " + jobIds[j]);
+            console.log("addresses array: " + addresses[j]);
+            fetch('https://maps.googleapis.com/maps/api/geocode/json?address='+ addresses[j].split(" ")
+              + '&key=AIzaSyDlXAOpZfmgDvrk4G7MkD6NXxPf9yJeJo8')
+              .then((response) => response.json())
+              .then((responseJson) => {
+                let lat = responseJson.results["0"].geometry.location.lat;
+                let lng = responseJson.results["0"].geometry.location.lng;
+                if (this._latMatch(this.state.latitude, lat) && this._lngMatch(this.state.longitude, lng)) {
+                  coordMatch.push(true);
+                  jobId = jobIdMatch;
+                  console.log("jobId: " + jobId);
+                } else {
+                  coordMatch.push(false);
+                }
+                this.setState({
+                  coordinateMatches: coordMatch,
+                  jobId: jobId,
+                });
+              })
+              .catch((error) => {
+                console.error(error);
               });
-            })
-            .catch((error) => {
-              console.error(error);
-            });
+          }
         }
-      }
-    });
+      });
   }
 
   _getCurrentLocation() {
@@ -122,8 +139,10 @@ class Location extends Component {
           longitude: position.coords.longitude,
           error: null,
         });
-        this._getAddresses(this.props.bizId);
+        this._getAddresses();
         this._clockInAndOut(this.state.coordinateMatches);
+        console.log("looking");
+        console.log("state.jobId: " + this.state.jobId);
       },
       (error) => this.setState({ error: error.message }),
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
@@ -131,13 +150,17 @@ class Location extends Component {
   }
 
   _manualClockInOut() {
-    this.setState({
-      manualClockInOut: true,
-    });
-    if (this.state.manualClockInOut && this.state.clockStatus) {
+    if (this.state.clockStatus) {
       this._clockOut();
+      this.setState({
+        clockStatus: false,
+      });
+      console.log(this.state.clockStatus);
     } else {
       this._getCurrentLocation();
+      if (this.state.clockable) {
+        this._clockIn();
+      }
     }
   }
 
@@ -146,7 +169,7 @@ class Location extends Component {
       if (this.props.clockStatus) {
         return "Clocked In"
       } else {
-        return "Clocked In"
+        return "Clocked Out"
       }
     }
     if (this.state.clockStatus) {
@@ -156,79 +179,35 @@ class Location extends Component {
     }
   }
 
-  componentWillMount() {
-    if (!this.state.manualClockInOut) {
-      this.timer = setInterval(()=> this._getCurrentLocation(), 5000);
-    }
-  }
-
   render() {
-    const { bizId } = this.props;
-    const { user } = this.props;
-    const { weekTimeInHours } = this.props;
-    const { payRate } = this.props;
-    const { totalPay } = this.props;
-    const { clockStatus } = this.props
-      return (
-        <View style={ styles.listStyle }>
-          <Text style={ styles.userStyle }>
-            {this.props.user + " "}
-          </Text>
-          <Text style={ styles.textStyle }>{"Week Time: " + this.props.weekTimeInHours}</Text>
-          <Text style={ styles.textStyle }>{"Pay Rate: " + "$" + this.props.payRate}</Text>
-          <Text style={ styles.textStyle }>{"Net Pay: " + "$" + this.props.totalPay}</Text>
-          <Text style={ styles.textStyle }>{this._clockStatusText()}</Text>
-          <TouchableOpacity
-            onPress={() => this._manualClockInOut()}
-          >
-            <Text>Clock In/Out</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-  }
+    const totalPay = Math.round(this.props.totalPay * 100) / 100;
+    return (
+      <View>
+        <List containerStyle={{marginBottom: 20}}>
 
-const styles = {
-
-  listStyle: {
-    width: 400,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    backgroundColor: '#5C77E6',
-    padding: 10,
-    marginLeft: 'auto',
-    marginRight: 'auto',
-    shadowColor: 'black',
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 0,
-    elevation: 15,
-  },
-
-  userStyle: {
-    fontWeight: 'bold',
-    fontSize: 18,
-    marginTop: 'auto',
-    marginBottom: 'auto',
-    color: 'white',
-    textAlign: 'left',
-    borderColor: 'white',
-    borderBottomWidth: 1,
-    height: 50,
-  },
-
-  textStyle: {
-    color: 'white',
-    marginTop: 10,
-    marginBottom: 10,
-  },
-
-  buttonStyle: {
-    borderWidth: 1,
-    borderColor: 'blue',
-    borderStyle: 'solid',
-    borderRadius: 10,
-    backgroundColor: 'transparent',
+          <ListItem
+            roundAvatar
+            title={this.props.weekTimeInHours}
+          />
+          <ListItem
+            leftIcon={{name: 'attach-money'}}
+            title={"$" + totalPay}
+          />
+          <ListItem
+            leftIcon={{name: 'access-alarm'}}
+            title={this._clockStatusText()}
+          />
+        </List>
+        <Button
+          icon={{name: 'access-alarm'}}
+          backgroundColor='#03A9F4'
+          fontFamily='Lato'
+          buttonStyle={{borderRadius: 0, marginLeft: 0, marginRight: 0, marginBottom: 0}}
+          title='Clock In/Out'
+          onPress={() => this._manualClockInOut()}
+        />
+      </View>
+    );
   }
 }
 

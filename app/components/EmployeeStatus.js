@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { ActivityIndicator, ListView, Text, View, ScrollView, AsyncStorage, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import Location from '../components/Location.js';
+import { ActivityIndicator, ListView, Text, View, AsyncStorage, TouchableOpacity } from 'react-native';
+import { Avatar, Card, ListItem, Button } from 'react-native-elements'
+import Location from '../components/Location';
 
 class EmployeeStatus extends Component {
   constructor(props) {
@@ -14,6 +14,7 @@ class EmployeeStatus extends Component {
       payRate: '',
       totalPay: '',
       clocked: '',
+      jobs: [],
     }
   }
 
@@ -22,7 +23,7 @@ class EmployeeStatus extends Component {
     if (id === null) {
       return "Enter ID";
     } else {
-    fetch('https://spring-clock.herokuapp.com/rest/get/employee/' + id)
+    fetch('https://spring-clock.herokuapp.com/rest/mobile/get/employee/' + id)
       .then((response) => response.json())
       .then((responseJson) => {
         this.setState({
@@ -34,8 +35,8 @@ class EmployeeStatus extends Component {
           totalPay: responseJson["0"].totalPay,
           clocked: responseJson["0"].clocked,
         });
-        this._refreshUserData();
       })
+      .then(() => this._refreshUserData())
       .catch((error) => {
         console.error(error);
       });
@@ -44,7 +45,7 @@ class EmployeeStatus extends Component {
 
   async _refreshUserData() {
     let id = await AsyncStorage.getItem('userId');
-    fetch('https://spring-clock.herokuapp.com/rest/status/refresh/' + id)
+    fetch('https://spring-clock.herokuapp.com/rest/mobile/status/refresh/' + id)
       .then((responseJson) => {
         return responseJson;
       })
@@ -58,8 +59,7 @@ class EmployeeStatus extends Component {
   }
 
   render() {
-    let bizId = this.state.bizId;
-    const myIcon = (<Icon name='refresh' size={33} color='#3457E6' />);
+    const totalPay = Math.round(this.state.totalPay * 100) / 100;
     if (this.state.isLoading) {
       return (
         <View style={{flex: 1, paddingTop: 20}}>
@@ -67,28 +67,35 @@ class EmployeeStatus extends Component {
         </View>
       );
     }
-
     return (
-      <View>
-        <Location
-          bizId = { bizId }
-          user = { this.state.user }
-          weekTimeInHours = { this.state.weekTimeInHours }
-          payRate = { this.state.payRate }
-          totalPay = { this.state.totalPay }
-        ></Location>
-        <TouchableOpacity style={ styles.buttonStyle }
-           onPress={() => this._getUserData()}>
-          <Text style={ styles.iconStyle }>
-            { myIcon }
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <Card
+        title={this.state.user}
+      >
+        <View style={ styles.viewStyle }>
+          <Location
+            user = { this.state.user }
+            weekTimeInHours = { this.state.weekTimeInHours }
+            payRate = { this.state.payRate }
+            totalPay = { totalPay }
+            clockStatus = { this.state.clocked }
+          />
+          <Button
+            icon={{name: 'refresh'}}
+            title={'Refresh Status'}
+            onPress={() => this._getUserData()}
+            containerStyle={{ marginTop: 20 }}
+          />
+        </View>
+      </Card>
     );
   }
 }
 
 const styles = {
+  viewStyle: {
+    marginLeft: 5,
+    marginRight: 5,
+  },
 
   buttonStyle: {
     alignSelf: 'center',
@@ -105,7 +112,6 @@ const styles = {
   textStyle: {
     color: 'white',
     marginTop: 10,
-    marginBottom: 10,
   },
 
   iconStyle: {
