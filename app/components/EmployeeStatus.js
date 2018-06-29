@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { ActivityIndicator, ListView, Text, View, AsyncStorage, TouchableOpacity } from 'react-native';
-import { Avatar, Card, ListItem, Button } from 'react-native-elements'
+import { Avatar, Card, ListItem, Button } from 'react-native-elements';
 import Location from '../components/Location';
 
 class EmployeeStatus extends Component {
