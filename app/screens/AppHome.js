@@ -9,7 +9,7 @@ class AppHome extends Component {
     super(props);
     this.state = {
       text: "Enter ID",
-      userId: [],
+      userId: "",
     };
   }
   static navigationOptions = {
@@ -17,20 +17,20 @@ class AppHome extends Component {
   };
 
   async _userIdTrue() {
-      try {
-         let value = await AsyncStorage.getItem('userId');
-         if (value != null){
-           this.setState({
-             userId: true
-           });
-         } else {
-           this.setState({
-             userId: false
-           });
-        }
-      } catch (error) {
-        console.log(error);
+    try {
+      let value = await AsyncStorage.getItem('userId');
+      if (value != null){
+        this.setState({
+          userId: true
+        });
+      } else {
+        this.setState({
+          userId: false
+        });
       }
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   componentDidMount() {
@@ -40,7 +40,7 @@ class AppHome extends Component {
   render() {
     if (!this.state.userId) {
       return (
-        <View style={ styles.outerScreen }>
+        <View style={ styles.noUserIdStyle }>
           <Text style={ styles.labelStyle }>Enter Employee ID</Text>
           <EnterIdForm/>
           <Refresh
@@ -59,32 +59,25 @@ class AppHome extends Component {
 }
 
 const styles = {
-  outerScreen: {
+  noUserIdStyle: {
     flex: 1,
     flexDirection: 'column',
-    justifyContent: 'flex-start',
-    alignItems: 'stretch',
-  },
-
-  componentPadding: {
-    padding: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 4,
+    borderColor: 'transparent',
+    shadowColor: 'black',
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 0,
+    elevation: 15,
+    paddingBottom: 10,
+    marginBottom: 15,
   },
 
   labelStyle: {
-    paddingLeft: 10,
-    paddingTop: 10,
-  },
-
-  changeId: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-
-  noUserId: {
     textAlign: 'center',
-    marginTop: 'auto',
-    marginBottom: 'auto',
-    padding: 30,
+    paddingTop: 10,
   },
 }
 
