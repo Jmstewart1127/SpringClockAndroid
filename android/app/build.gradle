@@ -96,15 +96,15 @@ def enableProguardInReleaseBuilds = false
 
 
 android {
-    compileSdkVersion 23
+    compileSdkVersion 26
     buildToolsVersion "23.0.3"
 
     defaultConfig {
-        applicationId "com.springclock"
+        applicationId "com.springclock4android"
         minSdkVersion 16
-        targetSdkVersion 23
-        versionCode 8
-        versionName "1.7"
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.1"
         ndk {
             abiFilters "armeabi-v7a", "x86"
         }
